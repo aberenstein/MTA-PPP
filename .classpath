@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Program Files/IBM/WebSphere/AppServer/lib/j2ee.jar"/>
+	<classpathentry kind="lib" path="C:/development/environ/MTA/maximo.ear/businessobjects.jar"/>
+	<classpathentry kind="lib" path="C:/development/environ/MTA/maximo.ear/lib"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

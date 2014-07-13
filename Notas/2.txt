@@ -1,0 +1,21 @@
+approve(MboSetRemote) (3)
+	approve(Date)
+		updateRelatedObjects
+			createStdRecAdj (1)
+
+
+save
+	updateRelatedObjects
+		createStdRecAdj (1)
+
+
+save
+	approveShipReceipt
+		approve(Date)
+			updateRelatedObjects
+				createStdRecAdj (1)
+
+
+
+
+

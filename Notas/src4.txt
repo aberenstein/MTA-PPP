@@ -1,0 +1,877 @@
+package psdi.webclient.system.beans;
+
+import psdi.util.ApplicationError;
+import psdi.workflow.WorkflowDirector;
+import javax.servlet.http.HttpSessionBindingEvent;
+import psdi.mbo.MboSetData;
+import psdi.util.MXApplicationException;
+import psdi.util.MXRequiredFieldException;
+import psdi.common.erm.ERMAttributeError;
+import psdi.mbo.MboValueData;
+import psdi.mbo.MboValueInfoStatic;
+import java.util.Date;
+import psdi.util.MXSession;
+import java.rmi.RemoteException;
+import psdi.util.MXException;
+import psdi.webclient.system.controller.SessionContext;
+import psdi.webclient.system.controller.BoundComponentInstance;
+import psdi.webclient.system.controller.ControlInstance;
+import psdi.webclient.system.session.WebClientSession;
+import psdi.mbo.MboRemote;
+import psdi.webclient.system.erm.UIERMEntity;
+import psdi.app.appsetup.CtrlCondPropCache;
+import java.util.HashMap;
+import java.util.HashSet;
+import psdi.webclient.system.controller.ComponentInstance;
+import psdi.webclient.system.controller.WebClientEvent;
+import psdi.webclient.system.controller.AppInstance;
+import java.util.Hashtable;
+import psdi.webclient.system.controller.BoundAttribute;
+import psdi.webclient.system.controller.BoundControl;
+import java.util.Vector;
+import java.util.List;
+import psdi.mbo.MboData;
+import java.util.Set;
+import psdi.util.BitFlag;
+import java.util.Map;
+import psdi.mbo.MboSetRemote;
+import javax.servlet.http.HttpSessionBindingListener;
+
+public class DataBean extends WebClientBean implements HttpSessionBindingListener, DataBeanListener
+{
+    public static final int ATTR_READONLY = 2;
+    public static final int ATTR_REQUIRED = 4;
+    public static final int ATTR_DEFAULT = 8;
+    public static final int ATTR_QBE = 16;
+    public static final int ATTR_COLUMN = 32;
+    public static final int ATTR_RESET = 64;
+    public static final int ATTR_REFRESH_TABLE = 128;
+    public static final int TABLE_EXPANDED = 1;
+    public static final int TABLE_AT_FIRST_PAGE = 2;
+    public static final int TABLE_AT_LAST_PAGE = 4;
+    public static final int TABLE_AT_FIRST_ROW = 8;
+    public static final int TABLE_AT_LAST_ROW = 16;
+    public static final int TABLE_FILTER_EXPANDED = 32;
+    public static final int TABLE_DETAILS_EXPANDED = 64;
+    public static final int TABLE_ROW_CHANGED = 128;
+    public static final int TABLE_FILTERED = 256;
+    public static final int TABLE_REFRESH_FILTER = 512;
+    public static final int TABLE_REFRESH_ROW = 1024;
+    public static final int TABLE_REFRESH_ALL_ROWS = 2048;
+    public static final int TABLE_ALL_SELECTED = 4096;
+    public static final int TABLE_START_EMPTY = 8192;
+    public static final int TABLE_USE_SUBSELECT = 16384;
+    public static final int TABLE_SUBSELECT_ON = 32768;
+    public static final int TABLE_REFRESH_TITLE = 65536;
+    public static final int MAX_TABLEROWS = 500;
+    public static final String ALL_BOOKMARKS = "ALL_BOOKMARKS";
+    public static final String ALL_RECORDS = "ALL_RECORDS";
+    protected MboSetRemote mboSetRemote;
+    protected boolean alwaysSelected;
+    protected int removeOnCancel;
+    protected int saveCount;
+    protected Map<String, BitFlag> attributes;
+    protected Set<String> tableAttributes;
+    protected Set<String> resetList;
+    protected Set<String> refreshList;
+    protected Set<String> requiredFields;
+    protected Set<String> conditionallyRequired;
+    protected MboData zombieData;
+    protected List<MboData> tableData;
+    protected MboData currentRecordData;
+    protected String appName;
+    protected int currentRow;
+    protected String keyAttribute;
+    protected String[] keyAttributes;
+    protected String mboName;
+    protected String userWhereClause;
+    protected String appWhere;
+    protected String orderBy;
+    protected String defaultOrderBy;
+    protected Vector<DataBeanListener> listeners;
+    protected String parentRelationship;
+    protected DataBean parent;
+    protected boolean resetRemote;
+    protected Map<String, BoundControl> boundInputs;
+    protected Map<String, BoundAttribute> boundAttributes;
+    protected boolean newRowUnedited;
+    protected BitFlag tableStateFlags;
+    protected boolean tableDataInvalid;
+    protected boolean refreshQbe;
+    protected Hashtable<String, String> qbeAttributes;
+    protected Hashtable<String, String> defaultQbe;
+    protected Hashtable<String, String> savedQbeAttributes;
+    protected Hashtable<String, String> savedFilterSettings;
+    protected String multiQbe;
+    protected boolean closingBean;
+    protected AppInstance app;
+    protected WebClientEvent creatingEvent;
+    protected WebClientEvent lastEventHandled;
+    String otherListeners;
+    protected int startrow;
+    protected int lastfetchedindex;
+    protected boolean hasTableData;
+    protected int rowsperpage;
+    protected int eventrow;
+    protected int dialogReferences;
+    protected String smartFillValue;
+    protected boolean fetchData;
+    protected String returnAttribute;
+    protected String returnComponentlId;
+    protected ComponentInstance returnComponent;
+    protected String descAttributeId;
+    protected boolean esigvalidated;
+    protected boolean mbosetfromzombie;
+    protected String currentQuery;
+    protected String currentQueryDescription;
+    protected String startEmpty;
+    protected String qualrestrict;
+    protected boolean screenDesignMode;
+    protected String designerMboName;
+    protected boolean emptyOnClear;
+    protected boolean hasUnappliedAppDefaults;
+    protected boolean hasUnappliedQbeDefaults;
+    private HashSet<String> controlSigOptions;
+    private Map<Integer, Map<String, HashMap<String, String>>> conditionalPropCache;
+    protected CtrlCondPropCache propCache;
+    protected HashMap<String, Object[]> dynamicDefaults;
+    protected HashMap<String, Object[]> defaultDynamicQbe;
+    protected boolean userQbeNotCommited;
+    protected String queryNameBeforeReviseAction;
+    private boolean asyncLock;
+    protected boolean listTableRetain;
+    protected boolean listTableModified;
+    protected static final int ROW_INSERT = 2;
+    protected static final int ROW_MODIFY = 1;
+    protected static final int ROW_DELETE = 3;
+    protected static final int ROW_IGNORE = 0;
+    protected UIERMEntity ermEntity;
+    protected boolean globalAppTableRetain;
+    private boolean childTableRetainPosition;
+    private boolean retainPosition;
+    protected Map<String, String> appDefaultValues;
+    protected Map<String, String> defaultUserValues;
+    private MboRemote zombieMbo;
+    private boolean revalidate;
+    private boolean validated;
+    WebClientEvent validatedEvent;
+    
+    public DataBean();
+    
+    public void setupBean(final WebClientSession wcs);
+    
+    private String getPropertyWithNullReplacingEmptyString(final ControlInstance control, final String key);
+    
+    public void bindComponent(final BoundComponentInstance boundComponent);
+    
+    public void unbindComponent(final BoundComponentInstance boundComponent);
+    
+    @Deprecated
+    public void setupBean(final SessionContext sc);
+    
+    protected boolean setupNonPersistent() throws MXException, RemoteException;
+    
+    protected void initialize() throws MXException, RemoteException;
+    
+    public void setNewRowUnedited(final boolean unedited);
+    
+    public boolean isNewRowUnedited();
+    
+    protected String[] getTableAttributes();
+    
+    public void setAppDefault(final String attribute, final String value);
+    
+    public void setQbeDefaults();
+    
+    public void setAppDefaults();
+    
+    public void setParent(final DataBean parent, final String parentRelationship);
+    
+    public DataBean getParent();
+    
+    public void addListener(final DataBeanListener listener);
+    
+    public void removeListener(final DataBeanListener listener);
+    
+    public void fireDataChangedEvent(final DataBean speaker);
+    
+    public void fireDataChangedEvent();
+    
+    private void checkForListeners();
+    
+    public void fireStructureChangedEvent(final DataBean speaker);
+    
+    public void sendRefreshTable();
+    
+    public void fireStructureChangedEvent();
+    
+    public void listenerChangedEvent(final DataBean speaker);
+    
+    public void dataChangedEvent(final DataBean speaker);
+    
+    public void structureChangedEvent(final DataBean speaker);
+    
+    private boolean checkFireStructureChangedEvent(final String attribute);
+    
+    private boolean checkRefreshTableAllRows(final String attribute);
+    
+    public void fireChildChangedEvent();
+    
+    public void setMboName(final String sMboName);
+    
+    public String getMboName();
+    
+    public MXSession getMXSession();
+    
+    public void setDefaultOrderBy(final String sOrderByClause) throws MXException, RemoteException;
+    
+    public String getDefaultOrderBy();
+    
+    public void setOrderBy(final String sOrderByClause) throws MXException, RemoteException;
+    
+    public String getOrderBy();
+    
+    public void setAppWhere(final String sWhereClause) throws MXException, RemoteException;
+    
+    public String getAppWhere() throws MXException, RemoteException;
+    
+    protected MboSetRemote getMboSetRemote() throws MXException, RemoteException;
+    
+    protected void setERMOnMboSet() throws RemoteException, MXException;
+    
+    public boolean hasMboSetRemote();
+    
+    public MboSetRemote getMboSet() throws MXException, RemoteException;
+    
+    protected void resetDataBean();
+    
+    public void setApp(final String appName) throws RemoteException;
+    
+    protected void setApp() throws RemoteException;
+    
+    public String getKeyAttribute();
+    
+    public String[] getKeyAttributes();
+    
+    public String[] getAttributes();
+    
+    public boolean isAttribute(final String attribute);
+    
+    public boolean isTableAttribute(final String attribute);
+    
+    public void addAttribute(final String attribute, final BitFlag flags);
+    
+    public void addQbeAttribute(final String attribute);
+    
+    public void setAttributes(final String[] attributelist, final BitFlag[] flags);
+    
+    protected void clearQbeAttributes();
+    
+    protected void cleanup();
+    
+    public int count() throws MXException, RemoteException;
+    
+    public void setUserWhere(final String whereClause) throws MXException;
+    
+    public String getUserWhere() throws MXException, RemoteException;
+    
+    public String getUserAndQbeWhere() throws MXException, RemoteException;
+    
+    protected void invalidateTableData();
+    
+    public void useStoredQuery(final String queryName) throws MXException, RemoteException;
+    
+    public String getQbe(final String attribute);
+    
+    public void saveCurrentQbeSettings(final boolean forceOverride) throws MXException, RemoteException;
+    
+    public void clearSavedQbeSettings();
+    
+    public void restoreSavedQbeSettings() throws MXException, RemoteException;
+    
+    public void clearSavedFilterSettings();
+    
+    public void setQbe(final String attribute, final String expression) throws MXException;
+    
+    public void setQbe(final String attribute, final MboSetRemote expression) throws MXException;
+    
+    public void setQbe(final String[] attributes, final String expression) throws MXException, RemoteException;
+    
+    public void setQbe(final Hashtable<String, String> qbeAttrs) throws MXException, RemoteException;
+    
+    public void setDefaultQbe(final String attribute, final String expression);
+    
+    public void setQbe(final String expression) throws MXException, RemoteException;
+    
+    public String getQbe() throws MXException, RemoteException;
+    
+    public Hashtable<String, String> getQbeAttributes();
+    
+    public void setQbeAttributes(final Hashtable<String, String> newQbeAttributes) throws MXException;
+    
+    public void setQbeExactMatch(final boolean exact) throws MXException, RemoteException;
+    
+    public void setQbeCaseSensitive(final boolean caseSensitive) throws MXException, RemoteException;
+    
+    public void resetQbe() throws MXException, RemoteException;
+    
+    public boolean getBoolean(final String col) throws MXException, RemoteException;
+    
+    public boolean getBoolean(final int row, final String col) throws MXException, RemoteException;
+    
+    public String getString(final String attribute);
+    
+    public String getString(final int row, final String attribute);
+    
+    public String getColumnString(final int row, final String col) throws MXException, RemoteException;
+    
+    public Date getColumnDate(final int row, final String col) throws MXException, RemoteException;
+    
+    public Date getDate(final String attribute) throws MXException, RemoteException;
+    
+    public String getTitle(final String attribute) throws MXException, RemoteException;
+    
+    public MboRemote getZombie() throws MXException, RemoteException;
+    
+    public MboRemote getMboOrZombie() throws MXException, RemoteException;
+    
+    public MboValueInfoStatic getMboValueInfo(final String attribute) throws MXException, RemoteException;
+    
+    public MboValueData getZombieMboValueData(final String attribute) throws MXException, RemoteException;
+    
+    public MboValueData getMboValueData(final int nRow, final String attribute) throws MXException, RemoteException;
+    
+    public boolean isAttributeHidden(final String attribute) throws RemoteException, MXException;
+    
+    public boolean isAttributeHidden(final int row, final String attribute) throws RemoteException, MXException;
+    
+    public boolean isMboHidden() throws RemoteException, MXException;
+    
+    public boolean isMboHidden(final int row) throws RemoteException, MXException;
+    
+    public MboValueData getMboValueData(final String attribute) throws MXException, RemoteException;
+    
+    @Deprecated
+    private BoundAttribute getBoundAttribute(final String componentId);
+    
+    public MboSetRemote getRemoteForLookup() throws MXException, RemoteException;
+    
+    public MboSetRemote getList(final String attribute) throws MXException, RemoteException;
+    
+    public MboSetRemote getList(final Integer row, final String attribute) throws MXException, RemoteException;
+    
+    public MboSetRemote getList(final int nRow, final String attribute) throws MXException, RemoteException;
+    
+    public String[][] getDataList(final String dataAttribute) throws MXException, RemoteException;
+    
+    public String[][] getDataList(final int row, final String dataAttribute) throws MXException, RemoteException;
+    
+    public String[][] getDataList(final int row, final String dataAttribute, final String keyAttributeName, final String displayAttribute) throws MXException, RemoteException;
+    
+    public String[][] getDataList(final int row, final String dataAttribute, final String displayAttribute) throws MXException, RemoteException;
+    
+    public String[][] getDataListFromMboSetRemote(final MboSetRemote setRemote, final String dataAttribute, final String displayAttribute) throws MXException, RemoteException;
+    
+    public void validate() throws MXException, RemoteException;
+    
+    public void validateMbo() throws MXException, RemoteException;
+    
+    public void validateChildren() throws MXException, RemoteException;
+    
+    private List<ERMAttributeError> determineBlankRequiredFields();
+    
+    public MXException checkAndDistributeRequiredError(final MXException mxe);
+    
+    public void handleRequiredFieldException(final MXRequiredFieldException requiredFieldException, final WebClientEvent event);
+    
+    public void save() throws MXException;
+    
+    protected void preSaveChecks() throws MXException;
+    
+    public void checkForAppError() throws MXException;
+    
+    private void setRequiredOnMbo(final MboRemote mbo) throws MXException, RemoteException;
+    
+    protected void setCurrentRecordData(final MboRemote mbo) throws MXException, RemoteException;
+    
+    public void save(final MboRemote mbo) throws MXException, RemoteException;
+    
+    public void reset() throws MXException;
+    
+    public boolean canCloseBean();
+    
+    protected boolean isMboSetSame(final MboSetRemote msr);
+    
+    public boolean hasSameMboSet(final DataBean bean);
+    
+    public void addDialogReference();
+    
+    public void removeDialogReference();
+    
+    public void close();
+    
+    public boolean setCurrentRow(final int nRow) throws MXException, RemoteException;
+    
+    protected boolean moveTo(final int row) throws MXException, RemoteException;
+    
+    public int getCurrentRow();
+    
+    public boolean next() throws MXException, RemoteException;
+    
+    public boolean previous() throws MXException, RemoteException;
+    
+    public void insert(final int nRow) throws MXException, RemoteException;
+    
+    public void insert() throws MXException, RemoteException;
+    
+    public void insertAtEnd() throws MXException, RemoteException;
+    
+    public void delete() throws MXException, RemoteException;
+    
+    public void delete(final int nRow) throws MXException, RemoteException;
+    
+    public void deleteAndRemove() throws MXException, RemoteException;
+    
+    public void deleteAndRemove(final int nRow) throws MXException, RemoteException;
+    
+    public void undelete() throws MXException, RemoteException;
+    
+    public void undelete(final int nRow) throws MXException, RemoteException;
+    
+    public void setDefaultValue(final String attribute, final MboRemote value) throws MXException;
+    
+    public void setDefaultValue(final String attribute, final String value) throws MXException;
+    
+    public void setUserDefaults() throws MXException, RemoteException;
+    
+    public String getDefaultValue(final String attribute);
+    
+    public void setValue(final String attribute, final String value) throws MXException;
+    
+    @Deprecated
+    private BoundAttribute getBoundAttribute(final String controlId, final String attribute);
+    
+    @Deprecated
+    public void setDate(final String controlId, final String attribute, final Date value) throws MXException;
+    
+    public void setDate(final String componentId, final Date value) throws MXException;
+    
+    public void setDate(final BoundComponentInstance boundComponent, final Date value) throws MXException;
+    
+    public void setValue(final int nRow, final String attribute, final String value) throws MXException;
+    
+    public void setValue(final String attribute, final String value, final long accessModifier) throws MXException;
+    
+    public void setValue(final int nRow, final String attribute, final String value, final long accessModifier) throws MXException;
+    
+    protected void afterSetValue(final String attribute) throws RemoteException, MXException;
+    
+    public void setValue(final String attribute, final MboRemote mboRemote) throws MXException;
+    
+    public void setValue(final int row, final String attribute, final MboRemote mboRemote) throws MXException;
+    
+    public void setValue(final String attribute, final MboSetRemote mboSetRemote) throws MXException;
+    
+    public int returnLookupValue(final String lookupValue) throws MXException;
+    
+    @Deprecated
+    public int returnLookupValue(final String componentId, final MboRemote lookupMbo) throws MXException;
+    
+    public int returnLookupValue(final MboRemote lookupMbo) throws MXException;
+    
+    public int returnLookupValue(final MboSetRemote lookupMboSet) throws MXException;
+    
+    private void checkComponentForReadonly(final String attribute, final BoundComponentInstance component) throws MXException, RemoteException, MXApplicationException;
+    
+    public MboRemote getMbo() throws MXException, RemoteException;
+    
+    public MboRemote getMbo(final int row) throws MXException, RemoteException;
+    
+    public boolean duplicateMbo() throws MXException, RemoteException;
+    
+    public String[][] getDataAsArray();
+    
+    public String[][] getDataAsArray(final String[] attributeNames);
+    
+    public String[][] getSelectedDataAsArray();
+    
+    public String[][] getSelectedDataAsArray(final String[] attributeNames);
+    
+    public void propagateRequired() throws RemoteException, MXException;
+    
+    public int fetchTableData() throws MXException, RemoteException;
+    
+    public int fetchTableData(final int startingRow) throws MXException, RemoteException;
+    
+    public boolean fetchRecordData() throws MXException, RemoteException;
+    
+    public MboSetData getMboSetData(final int row, final int count, final String[] attributeNames) throws MXException, RemoteException;
+    
+    public boolean hasLongDescriptionText(final int row, final String attribute);
+    
+    public boolean hasLongDescriptionText(final String attribute);
+    
+    public boolean toBeSaved() throws MXException;
+    
+    public boolean isRowDeleted(final int row);
+    
+    public boolean isModifiedRow();
+    
+    public boolean isModifiedRow(final int row);
+    
+    public boolean hasRow(final int row);
+    
+    public boolean isNewRow();
+    
+    public boolean isNewRow(final int row);
+    
+    public void valueBound(final HttpSessionBindingEvent event);
+    
+    public void valueUnbound(final HttpSessionBindingEvent event);
+    
+    public void select(final int row) throws MXException;
+    
+    public void unselect(final int row) throws MXException;
+    
+    public boolean isSelected(final int row) throws MXException;
+    
+    public Vector<MboRemote> getSelection() throws MXException;
+    
+    public void selectAll() throws MXException;
+    
+    public void unselect(final int startIndex, final int count) throws MXException;
+    
+    public void select(final int startIndex, final int count) throws MXException;
+    
+    public void unselectAll() throws MXException;
+    
+    public void selectRows(final Vector<MboRemote> selectMboRows, final Vector<MboRemote> unselectMboRows) throws MXException;
+    
+    public void resetWithSelection() throws MXException;
+    
+    public void sort() throws MXException;
+    
+    public void sort(final String sOrderByClause) throws MXException;
+    
+    @Deprecated
+    public int isColumnSorted(final String componentId) throws MXException;
+    
+    public boolean isEmpty() throws MXException, RemoteException;
+    
+    public String getCompleteWhere() throws MXException;
+    
+    public boolean checkMethodAccess(final String methodName) throws MXException;
+    
+    @Deprecated
+    public boolean needToAuthenticate(final SessionContext sc, final String option) throws MXException, RemoteException;
+    
+    public void setShowDetails(final boolean b);
+    
+    protected void validateRow() throws MXException, RemoteException;
+    
+    protected void validateClause() throws MXException, RemoteException;
+    
+    public void setRemoveOnCancel(final int row);
+    
+    public int getLastFetchIndex();
+    
+    public int getEndRow();
+    
+    public int getCacheRowIndex(final int rowDataBeanIndex);
+    
+    public int getMboRowIndex(final int tableRow);
+    
+    public int getPageStartIndex();
+    
+    public int getRowIndexFromEvent(final WebClientEvent event);
+    
+    public boolean hasPageRows();
+    
+    public boolean removeRowOnCancel(final int row);
+    
+    public boolean isTableRowSelected(final int row);
+    
+    public boolean getShowDetails();
+    
+    public int getPageEndRow();
+    
+    public int getPageRowCount();
+    
+    public int setfiltervalue() throws MXException;
+    
+    private void addErrorToComponent(final BoundComponentInstance component, final MXException exception, final WebClientEvent event, final String enteredValue, final String attribute, final int row);
+    
+    public boolean applyValuesToSharedAttributes(final ComponentInstance component, final String value);
+    
+    public void applyValuesToSharedAttributes(final ComponentInstance component);
+    
+    public void setValueFromComponent(final BoundComponentInstance changedComponent, final WebClientEvent event, final String newValue) throws MXException;
+    
+    public int setvalue() throws MXException, RemoteException;
+    
+    public void refreshFieldErrors() throws RemoteException, MXException;
+    
+    public List<ERMAttributeError> getNullRequiedFields() throws RemoteException, MXException;
+    
+    public String displaycount() throws MXException;
+    
+    public int copytonewrow() throws MXException;
+    
+    public int addrow() throws MXException;
+    
+    public int scrollnext() throws MXException;
+    
+    public int scrollprev() throws MXException;
+    
+    public int nextrow() throws MXException, RemoteException;
+    
+    public int prevrow() throws MXException;
+    
+    public int toggledetailstate(final boolean open) throws MXException;
+    
+    public int toggledeleterow() throws MXException;
+    
+    public int highlightrow() throws MXException;
+    
+    public int highlightrow(final int row) throws MXException;
+    
+    public int toggleselectrow() throws MXException, RemoteException;
+    
+    public int toggleselectallrows() throws MXException;
+    
+    public int sortcolumn() throws MXException;
+    
+    public int sortcolumn(final String sortString) throws MXException;
+    
+    public int instantdelete() throws MXException;
+    
+    public int filterrows() throws MXException;
+    
+    private void filterrowsinner() throws MXException;
+    
+    public int clearfilter() throws MXException;
+    
+    public boolean isTableStateFlagSet(final long flag);
+    
+    public BitFlag getTableStateFlags();
+    
+    public int selectrecord() throws MXException, RemoteException;
+    
+    public void resetJSPFlags();
+    
+    public int getEventRowIndex();
+    
+    public void setEventRowIndex(final int i);
+    
+    public WebClientEvent getLastEventHandled();
+    
+    public void setLastEventHandled(final WebClientEvent event);
+    
+    public void setTableFlag(final long flag, final boolean value);
+    
+    public int execute() throws MXException, RemoteException;
+    
+    public int callMethod(final WebClientEvent event) throws MXException, NoSuchMethodException, RemoteException;
+    
+    public int callMethod(final String methodName, final WebClientEvent event) throws MXException, RemoteException;
+    
+    public int callMethod(final WebClientEvent event, final Class[] paramTypes, final Object[] params) throws MXException, RemoteException;
+    
+    public int callMethod(final String methodName, final WebClientEvent event, final Class[] paramTypes, final Object[] params) throws MXException, RemoteException;
+    
+    public int findAndCallMethod(final WebClientEvent event, final DataBean datasrc, final String method, final Class[] paramTypes, final Object[] params) throws MXException, RemoteException;
+    
+    public int callRemoteMethod(final String method) throws MXException, NoSuchMethodException, RemoteException;
+    
+    public int callRemoteMethod(final String method, final Class[] paramTypes, final Object[] params) throws MXException, NoSuchMethodException, RemoteException;
+    
+    public int callBeanMethod(final WebClientEvent event) throws MXException, NoSuchMethodException, RemoteException;
+    
+    public int callBeanMethod(final String method, final WebClientEvent event) throws MXException, NoSuchMethodException, RemoteException;
+    
+    public int callBeanMethod(final WebClientEvent event, final Class[] paramTypes, final Object[] params) throws MXException, NoSuchMethodException, RemoteException;
+    
+    public int callBeanMethod(final String method, final WebClientEvent event, final Class[] paramTypes, final Object[] params) throws MXException, NoSuchMethodException, RemoteException;
+    
+    public String getReturnAttribute();
+    
+    public void setReturnAttribute(final String string);
+    
+    @Deprecated
+    public String getReturnControlId();
+    
+    public String getReturnComponentId();
+    
+    @Deprecated
+    public void setReturnControlId(final String string);
+    
+    public void setReturnComponentId(final String id);
+    
+    public void setReturnComponent(final ComponentInstance comp);
+    
+    public ComponentInstance getReturnComponent();
+    
+    public void handleRemoteException(final RemoteException e) throws MXException;
+    
+    public void turnEmptyStateOn();
+    
+    public MboRemote getMboForUniqueId(final long uid) throws MXException, RemoteException;
+    
+    public long getUniqueIdValue() throws MXException, RemoteException, NullPointerException;
+    
+    public String getUniqueIdName() throws MXException, RemoteException;
+    
+    public MboSetRemote smartFill(final int row, final String attribute, final String value, final boolean exactMatch) throws MXException, RemoteException;
+    
+    public MboSetRemote smartFill(final String attribute, final String value, final boolean exactMatch) throws MXException, RemoteException;
+    
+    public long getUniqueIdFromSmartFill(final String attribute, final String value) throws MXException, RemoteException;
+    
+    public long getUniqueIdFromSmartFill(final String applicName, final String attribute, final String value) throws MXException, RemoteException;
+    
+    public void refreshTable();
+    
+    public void reloadTable();
+    
+    public String getSmartFillValue();
+    
+    public void setSmartFillValue(final String smartFillValue);
+    
+    public int cancelDialog() throws MXException, RemoteException;
+    
+    public void checkESigAuthenticated(final String option) throws MXException, RemoteException;
+    
+    public void setEsigValidated(final boolean validated);
+    
+    public String getDescAttributeId();
+    
+    public void setDescAttributeId(final String string);
+    
+    public void setPageRowCount(final int rowCount);
+    
+    private void setQueryDesc();
+    
+    public int _useAllRecsQuery() throws MXException, RemoteException;
+    
+    public int useAllRecsQuery() throws MXException, RemoteException;
+    
+    private void useAllRecsQueryInner() throws MXException, RemoteException;
+    
+    public int _useAllBookmarksQuery() throws MXException, RemoteException;
+    
+    public int useAllBookmarksQuery() throws MXException, RemoteException;
+    
+    public int _usequery() throws MXException, RemoteException;
+    
+    public int usequery() throws MXException, RemoteException;
+    
+    private void usequeryinner() throws MXException, RemoteException;
+    
+    public void useQuery(final String queryName) throws MXException, RemoteException;
+    
+    public int sqlwhere() throws MXException, RemoteException;
+    
+    public int useqbe() throws MXException, RemoteException;
+    
+    private void useqbeInternal(final DataBean bean, final String[] individualQbes) throws RemoteException, MXException;
+    
+    public void queryAllRecs() throws MXException, RemoteException;
+    
+    public void queryAllBookmarks() throws MXException, RemoteException;
+    
+    public String getCurrentQueryName();
+    
+    public void clearBean() throws MXException, RemoteException;
+    
+    protected void setCurrentQueryName(final String queryName);
+    
+    public void setQueryBySiteQbe() throws MXException, RemoteException;
+    
+    protected void getWorkflowDirections(final WorkflowDirector director) throws MXException;
+    
+    public MXException[] getWarnings() throws MXException, RemoteException;
+    
+    public boolean moveToMboFromDataBean(final DataBean dataBean, final String dataAttribute) throws MXException, RemoteException;
+    
+    protected void reserveOnePair(final String key, final Object value);
+    
+    public int hierarchicalmove() throws MXException, RemoteException;
+    
+    public int getTableOffset();
+    
+    public String getSortOrder(final String sortAttribute);
+    
+    public void addSigOption(final String sigoption);
+    
+    public void addConditionalProperties(final String sigOption, final int row, final HashMap<String, String> properties);
+    
+    public HashMap<String, String> getConditionalProperties(final int row, final String sigOption) throws MXException, RemoteException;
+    
+    public boolean hasSigOptionAccess(final String sigOption) throws RemoteException, MXException;
+    
+    public boolean hasSigOptionAccess(final int row, final String sigOption) throws RemoteException, MXException;
+    
+    public MboSetRemote getMboSetFromSmartFind(final String attribute) throws MXException, RemoteException;
+    
+    public MboSetRemote getMboSetFromSmartFind(final String app, final String attribute) throws MXException, RemoteException;
+    
+    public boolean canFetchData();
+    
+    public MboSetRemote getRemoteForDownload() throws RemoteException, MXException;
+    
+    public boolean isSubSelect();
+    
+    public void setDynamicAppDefaults(final MboRemote mbo);
+    
+    public void setDynamicDefault(final String attribute, final DataBean frmDataBean, final String frmAttribute, final String defaultType);
+    
+    public void setDynamicQbeDefaults();
+    
+    public boolean changeRequiredField(final int row, final String attribute, final boolean required);
+    
+    public String getQueryNameBeforeReviseAction();
+    
+    public void setQueryNameBeforeReviseAction(final String queryName);
+    
+    public void setEmptyOnClear(final boolean emptyOnClear);
+    
+    public boolean asyncLocked();
+    
+    public void setAsyncLock(final boolean asyncLock);
+    
+    public boolean madeRequiredConditionally(final String attribute);
+    
+    public boolean isListTableModified();
+    
+    public void setListTableModified(final boolean inChange);
+    
+    public boolean isListTableRetain();
+    
+    public void setListTableRetain(final boolean inRetain);
+    
+    public String getCurrentQueryDescription();
+    
+    public void setCurrentQueryDescription(final String currentQueryDescription);
+    
+    public boolean boundToTable();
+    
+    public void setApplicationError(final String dataAttribute, final int row, final ApplicationError error) throws MXException;
+    
+    public String buildPortalMsg(final String attribute, final String newValue);
+    
+    public boolean rePosition() throws RemoteException, MXException;
+    
+    public boolean isAppTableRetain();
+    
+    public void positionState();
+    
+    public void markTablePosition(final boolean inFlg);
+    
+    public boolean isTablePostionMarked();
+    
+    public UIERMEntity getUIERMEntity();
+    
+    public String toString();
+    
+    public void registerDynamicControlsWithERM(final List<ControlInstance> controls) throws RemoteException, MXException;
+}

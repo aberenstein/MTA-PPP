@@ -1,0 +1,1 @@
+package psdi.webclient.beans.invusage;import java.rmi.RemoteException;import psdi.util.MXException;import psdi.webclient.beans.common.ChangeStatusBean;public class InvUseChangeStatusBean extends ChangeStatusBean{    public InvUseChangeStatusBean();        public int execute() throws MXException, RemoteException;}

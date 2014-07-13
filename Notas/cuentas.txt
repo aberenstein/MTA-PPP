@@ -1,0 +1,5 @@
+		CANTactual * PPPactual + CANTingr * VALORunit
+PPPnuevo =     -----------------------------------------------
+		            CANTactual + CANTingr
+
+

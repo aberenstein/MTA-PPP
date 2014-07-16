@@ -771,13 +771,16 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                 ((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), this.getDouble("exchangerate"), invcost);
             }
             ///AMB===v===
+            /// Errores #1 y #2: anulación y devolución de recepción en ARS y en USD
+            /// Antes de invocar updateInventoryAverageCost que actualiza el PPP del item se obtiene la fecha relevante del
+            /// tipo de cambio, que es la fecha de la recepción, para que el cálculo se realice al tipo de cambio correcto.
             /*
             else {            	
                 ((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), 1.0, invcost);
             }
             */
             else {
-                final boolean sameStoreroom = this.getString("fromstoreloc").equalsIgnoreCase(this.getString("tostoreloc"));	///<===AMB
+                final boolean sameStoreroom = this.getString("fromstoreloc").equalsIgnoreCase(this.getString("tostoreloc"));
                 if (!sameStoreroom) {
             		if (this.getTranslator().toInternalString("ISSUETYP", this.getString("issuetype")).equalsIgnoreCase("VOIDRECEIPT") ||
             			this.getTranslator().toInternalString("ISSUETYP", this.getString("issuetype")).equalsIgnoreCase("RETURN")) 
@@ -812,6 +815,14 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     ///AMB===v===
+    /**
+     * Obtiene la fecha efectiva para calcular el tipo de cambio de la devolución de inventario.
+     * La fecha efectiva es la fecha de la recepción que se desea anular.
+     *  
+     * @return	la fecha de la recepción asociada a éste movimiento
+     * @throws RemoteException
+     * @throws MXException
+     */
     private Date getActualDate() throws RemoteException, MXException
     {
     	MboSetRemote matRecTransSet = this.getMboSet("$MATRECTRANS2MATRECTRANS", "MATRECTRANS", "MATRECTRANSID = :RECEIPTREF");

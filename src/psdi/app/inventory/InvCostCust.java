@@ -38,6 +38,8 @@ public class InvCostCust extends InvCost
     }
     
 	///AMB===v===
+    /// Reemplazada por la función de más abajo.
+    /// Errores #1 y #2
 	/*
     @Override
     public void updateAverageCost(final double quantity, final double totalvalue, final double exr) throws MXException, RemoteException {
@@ -96,7 +98,10 @@ public class InvCostCust extends InvCost
 	public void updateAverageCost(double quantity, double totalvalue, double exr) throws MXException, RemoteException
 	{ 
 		///AMB===v===
-		double cur_bal = getCurrentBalance(null, null) + this.accumulativeReceiptQty;
+    	/// Calcula el PPP usando la fecha adecuada para el tipo de cambio.
+    	/// La fecha adecuada para el tipo de cambio es la que está almacenada en super.exchageDate o la fecha actual si ese valor es nulo.
+    	/// Errores #1 y #2
+		final double cur_bal = getCurrentBalance(null, null) + this.accumulativeReceiptQty;
 		if ((cur_bal + quantity <= 0.0D) || ((totalvalue == 0.0D) && (quantity == 0.0D))) {
 			return;
 		}
@@ -104,7 +109,7 @@ public class InvCostCust extends InvCost
 		double new_avgcost;
 		if (cur_bal > 0.0D)
 		{
-			double avgcost = getDouble("avgcost");
+			final double avgcost = getDouble("avgcost");
 			new_avgcost = (avgcost * cur_bal + totalvalue * exr) / (cur_bal + quantity);
 		} else {
 			new_avgcost = totalvalue * exr / quantity;

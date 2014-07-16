@@ -894,15 +894,18 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     private double getVendorCurrencyExchangeRate(final String vendor) throws MXException, RemoteException {
+    	cust.component.Logger.Log("vendor= " + vendor);
         final SqlFormat sqf = new SqlFormat(this, " company = :1");
         sqf.setObject(1, "COMPANIES", "company", vendor);
         final CompanySetRemote companySet = (CompanySetRemote)this.getMboSet("$getCompany" + vendor, "COMPANIES", sqf.format());
         if (companySet.isEmpty()) {
+        	cust.component.Logger.Log("companySet es vacío: exchangerate=1.0");
             return 1.0;
         }
         final CompanyRemote companyMbo = (CompanyRemote)companySet.getMbo(0);
         final String vendorCurrencyCode = companyMbo.getString("currencyCode");
         if (vendorCurrencyCode.equals(this.getString("currencycode"))) {
+        	cust.component.Logger.Log("vendorCurrencyCode("+vendorCurrencyCode+") != this.getString('currencycode'("+this.getString("currencycode")+"): exchangerate=1.0");
             return 1.0;
         }
         final CurrencyServiceRemote currService = (CurrencyServiceRemote)((AppService)this.getMboServer()).getMXServer().lookup("CURRENCY");
@@ -910,8 +913,10 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
         final String baseCurrencyCode = currService.getBaseCurrency1(this.getString("orgid"), this.getUserInfo());
         try {
             exchangerate = currService.getCurrencyExchangeRate(this.getUserInfo(), vendorCurrencyCode, baseCurrencyCode, this.getDate("transdate"), this.getString("orgid"));
+        	cust.component.Logger.Log("exchangerate= " + String.valueOf(exchangerate));
         }
         catch (MXApplicationException b) {
+        	cust.component.Logger.Log("Falló getCurrencyExchangeRate: " + b.getMessage());
             exchangerate = 1.0;
         }
         return exchangerate;

@@ -2,7 +2,6 @@ package cust.psdi.app.inventory;
 
 import java.rmi.RemoteException;
 
-import psdi.app.asset.AssetRemote;
 import psdi.app.inventory.InvCost;
 import psdi.app.inventory.Inventory;
 import psdi.app.inventory.MatUseTrans;

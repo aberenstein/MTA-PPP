@@ -97,6 +97,7 @@ public class InvCostCust extends InvCost
     @Override
 	public void updateAverageCost(double quantity, double totalvalue, double exr) throws MXException, RemoteException
 	{ 
+        cust.component.Logger.Log("InvCostCust.updateAverageCost");
 		///AMB===v===
     	/// Calcula el PPP usando la fecha adecuada para el tipo de cambio.
     	/// La fecha adecuada para el tipo de cambio es la que está almacenada en super.exchageDate o la fecha actual si ese valor es nulo.
@@ -116,16 +117,16 @@ public class InvCostCust extends InvCost
 		}
 		setValue("avgcost", new_avgcost, 2L);
     
-		UserInfo user = getUserInfo();
-    
-		CurrencyServiceRemote currService = (CurrencyServiceRemote)MXServer.getMXServer().lookup("CURRENCY");
-    
 		Date date = MXServer.getMXServer().getDate(getClientLocale(), getClientTimeZone());
 		if (super.exchageDate != null) {
 			date = super.exchageDate;
 			super.exchageDate = null;
 		}
     
+		final UserInfo user = getUserInfo();
+	    
+		final CurrencyServiceRemote currService = (CurrencyServiceRemote)MXServer.getMXServer().lookup("CURRENCY");
+	    
 		String baseCurrency1 = currService.getBaseCurrency1(getString("orgid"), user);
 		String baseCurrency2 = currService.getBaseCurrency2(getString("orgid"), user);
     

@@ -1317,7 +1317,8 @@ public class MatUseTrans extends Mbo implements MatUseTransRemote
             ((MatUseTrans)rtn).selectItemForReturn = true;
             final MboSetInfo msi = this.getMboSetInfo();
             final Map attrsOrig = msi.getAttributeDetails();
-            for (final MboValueInfo mvi : attrsOrig.values()) {
+            for (final Object mvi_ : attrsOrig.values()) {
+            	final MboValueInfo mvi = (MboValueInfo)mvi_;
                 if (!mvi.isUserdefined()) {
                     if (Arrays.asList(edits).contains(mvi.getAttributeName())) {
                         continue;

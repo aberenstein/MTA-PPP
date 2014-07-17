@@ -830,7 +830,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
         final MboRemote matRecTransRemote = matRecTransSet.getMbo(0);
         if (matRecTransRemote == null)
         {
-            final String[] params = { "Error de integridad en la base de datos.\nPor favor, comuniquese con el administrador del sistema." };
+            final String[] params = { "Error: No se encontró la transacción original." };
         	throw new MXApplicationException("messagebox", "CustomMessage", params);
         }
        	return matRecTransRemote.getDate("transdate");

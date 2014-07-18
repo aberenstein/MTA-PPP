@@ -304,7 +304,6 @@ public class MatUseTrans extends Mbo implements MatUseTransRemote
         if (invMbo != null)
         {
             InvCost invcost = (InvCost)getInvCostRecord(invMbo);
-            cust.component.Logger.Log("linecost2#6");
             this.setValue("linecost2", invcost.getDouble("avgcost2") * quantity, 2L);
         }
 	    ///AMB===^===

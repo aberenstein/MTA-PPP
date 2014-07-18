@@ -31,7 +31,6 @@ public class MatUseTransCust extends MatUseTrans
 	        InvCost invcost = (InvCost)getInvCostRecord(invMbo);
 	        if (invcost == null) throw new MXApplicationException("messagebox", "CustomMessage", params);
 
-	        cust.component.Logger.Log("linecost2#5");
             Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
             setValue("linecost2", getDouble("quantity") * -1.0D * avgcost2.doubleValue(), 2L);
 	  }
@@ -59,7 +58,6 @@ public class MatUseTransCust extends MatUseTrans
 	  }
 	  ///AMB===v===
 	  /// Reemplazada por la función de más abajo.
-	  /// Error #5
 	  /*
 	  private MboRemote getInvCostRecord(MboRemote inventory) throws MXException, RemoteException
 	  {

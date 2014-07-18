@@ -292,9 +292,23 @@ public class MatUseTrans extends Mbo implements MatUseTransRemote
         else {
             this.setValue("linecost", owner.getDouble("loadedcost"), 2L);
         }
+        ///AMB===v===
+        /// Error #5
+        /// Corrección al cálculo de linecost2
+        /*
         if (!this.isNull("exchangerate2")) {
             this.setValue("linecost2", this.getDouble("exchangerate2") * this.getDouble("linecost"), 2L);
         }
+        */
+        Inventory invMbo = (Inventory)getSharedInventory();
+        if (invMbo != null)
+        {
+            InvCost invcost = (InvCost)getInvCostRecord(invMbo);
+            cust.component.Logger.Log("linecost2#6");
+            this.setValue("linecost2", invcost.getDouble("avgcost2") * quantity, 2L);
+        }
+	    ///AMB===^===
+         
         this.setValue("assetnum", owner.getString("assetnum"), 11L);
         final MatRecTrans matrec = owner;
         this.setValue("rotassetnum", matrec.getRotAssetNum(), 11L);

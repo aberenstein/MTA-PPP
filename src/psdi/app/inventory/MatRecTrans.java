@@ -92,6 +92,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     
     public MatRecTrans(final MboSet ms) throws MXException, RemoteException {
         super(ms);
+        cust.component.Logger.Log("MatRecTrans.MatRecTrans");
         this.isApprovingReceipt = false;
         this.switchoffWOUpdate = false;
         this.transferFromNonInventory = false;
@@ -112,11 +113,11 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
         this.conversionException = null;
         this.locService = null;
         this.kitComponentsToAddToStore = null;
-        cust.component.Logger.Log("MatRecTrans");
     }
     
     @Override
     public void init() throws MXException {
+        cust.component.Logger.Log("MatRecTrans.init");
         super.init();
         try {
             final MboSetRemote mboSet = this.getThisMboSet();
@@ -218,6 +219,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     
     @Override
     public void add() throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.add");
         final Date systemDate = ((AppService)this.getMboServer()).getMXServer().getDate();
         final MatRecTransSet thisSet = (MatRecTransSet)this.getThisMboSet();
         final boolean toExecuteCompletAdd = thisSet.toExecuteCompleteAdd();
@@ -559,6 +561,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     
     @Override
     public void approve(Date statusDate) throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.approve");
         final MboRemote ownerRemote = this.getOwner();
         this.canApprove();
         if (ownerRemote != null && ownerRemote.isModified() && !(this.getOwner() instanceof InvoiceRemote)) {
@@ -678,6 +681,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     MboRemote getSharedInventory(final String storeLoc) throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.getSharedInventory");
         final MboRemote owner = this.getOwner();
         if (owner instanceof InventoryRemote && owner.getString("location").equals(storeLoc)) {
             return owner;
@@ -724,6 +728,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     private void createStdRecAdj(final double standardCost) throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.createStdRecAdj");
         final InvTransSetRemote invTransSet = (InvTransSetRemote)this.getMboSet("$CreateInvTrans" + this.getString("itemnum"), "INVTRANS", "");
         final InvTrans invTrans = (InvTrans)invTransSet.add(2L);
         invTrans.setValue("matrectransid", this.getString("matrectransid"));
@@ -734,6 +739,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
         final double lineCost = this.getDouble("quantity") * standardCost - this.getDouble("quantity") * this.getDouble("unitcost");
         invTrans.setValue("linecost", lineCost);
         if (!this.isNull("linecost2")) {
+        	cust.component.Logger.Log("linecost2#1");
             invTrans.setValue("linecost2", this.getDouble("linecost2"), 9L);
         }
         if (!this.isNull("exchangerate2")) {
@@ -742,6 +748,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     public void updateInventory(final InventoryRemote invmbo, final PORemote poMbo, final InvCost invcost) throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.updateInventory");
         if (invmbo == null) {
             return;
         }
@@ -790,7 +797,8 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             			// PARA CALCULAR EL TIPO DE CAMBIO PARA EL PPP UD
             			((Inventory)invmbo).exchageDate = getActualDate();
              		}
-            		
+                    cust.component.Logger.Log("---MARKER---");
+
                     ((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), 1.0, invcost);
                 }
             } 
@@ -1423,6 +1431,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     public void save() throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.save");
         if (this.toBeDeleted()) {
             return;
         }
@@ -1474,6 +1483,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             }
         }
         if (this.isTransfer()) {
+            cust.component.Logger.Log("---MARKER 2---");
             final MboRemote mboowner = this.getOwner();
             if (mboowner instanceof LocationRemote || mboowner.isBasedOn("InvUse")) {
                 if (item != null && mboowner != null && this.toBeAdded() && item.isKit() && !this.allKitComponentsAreInTransferToStore()) {
@@ -1511,6 +1521,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             return;
         }
         if (this.isTransfer()) {
+            cust.component.Logger.Log("---MARKER 3---");
             final MboRemote mboowner = this.getOwner();
             if (owner instanceof LocationRemote) {
                 if (!mboowner.getMboSet("MATRECTRANSOUT").isEmpty()) {
@@ -1640,6 +1651,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                 }
             }
             if (this.isTransfer()) {
+                cust.component.Logger.Log("---MARKER 4---");
                 if (this.isCourierOrLabor()) {
                     this.setValue("qtyheld", this.getDouble("quantity"), 2L);
                     this.updateRelatedObjects(poMbo, poLineMbo);
@@ -1909,6 +1921,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     
     @Override
     public void approve(final MboSetRemote assetInputSet) throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.approve2");
         SqlFormat sql = new SqlFormat("1=2");
         boolean canAppr = true;
         boolean isLargeApprovalAmt = false;
@@ -1965,6 +1978,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                     transMbo.setValue("currencylinecost", this.getDouble("currencylinecost"), 11L);
                     transMbo.setValue("linecost", this.getDouble("linecost"), 11L);
                     transMbo.setValue("loadedcost", this.getDouble("loadedcost"), 11L);
+                    cust.component.Logger.Log("linecost2#2");
                     transMbo.setValue("linecost2", this.getDouble("linecost2"), 11L);
                     final POLineRemote poLineMbo = this.getPOLine();
                     final PORemote poMbo = this.getPO();
@@ -2128,6 +2142,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                                             newMatRec.setValue("currencyunitcost", invcost, 2L);
                                             newMatRec.setValue("currencylinecost", 0.0, 11L);
                                             newMatRec.setValue("linecost", 0.0, 11L);
+                                            cust.component.Logger.Log("linecost2#3");
                                             newMatRec.setValue("linecost2", 0.0, 11L);
                                             lastLoadedCost = newMatRec.getDouble("loadedcost");
                                             lastItemNum = assetInput.getString("itemnum");
@@ -2141,6 +2156,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                                             newMatRec.setValue("currencyunitcost", invcost, 11L);
                                             newMatRec.setValue("currencylinecost", 0.0, 11L);
                                             newMatRec.setValue("linecost", 0.0, 11L);
+                                            cust.component.Logger.Log("linecost2#4");
                                             newMatRec.setValue("linecost2", 0.0, 11L);
                                             newMatRec.setValue("financialperiod", lastFinancialPeriod, 11L);
                                             newMatRec.setValue("issuetype", lastIssueType, 11L);
@@ -2560,6 +2576,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     protected void copyMatRecTransToMatRecTrans(final MatRecTransRemote matrec, final String issueType) throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.copyMatRecTransToMatRecTrans");
         final MboRemote owner = this.getOwner();
         MboRemote shipmentTransferMbo = null;
         boolean isShipmentType = false;
@@ -2895,6 +2912,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     public void updateInventoryCostAndBalances() throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.updateInventoryCostAnsBalances");
         if (this.isStageTransfer() || this.isShipTransfer() || this.isShipCancel()) {
             return;
         }
@@ -3517,6 +3535,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
     }
     
     public void createMatRecTransRecordforLifoFifo(final MboRemote inv) throws MXException, RemoteException {
+        cust.component.Logger.Log("MatRecTrans.createMatRecTransRecordforLifoFifo");
         MboRemote invlifofifocost = null;
         double qty = this.getDouble("receiptquantity");
         final String conditionCode = this.getString("conditionCode");

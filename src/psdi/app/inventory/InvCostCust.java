@@ -97,7 +97,6 @@ public class InvCostCust extends InvCost
     @Override
 	public void updateAverageCost(double quantity, double totalvalue, double exr) throws MXException, RemoteException
 	{ 
-        cust.component.Logger.Log("InvCostCust.updateAverageCost");
 		///AMB===v===
     	/// Calcula el PPP usando la fecha adecuada para el tipo de cambio.
     	/// La fecha adecuada para el tipo de cambio es la que está almacenada en super.exchageDate o la fecha actual si ese valor es nulo.

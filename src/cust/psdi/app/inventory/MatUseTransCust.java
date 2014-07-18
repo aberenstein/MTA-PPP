@@ -31,14 +31,11 @@ public class MatUseTransCust extends MatUseTrans
 	        InvCost invcost = (InvCost)getInvCostRecord(invMbo);
 	        if (invcost == null) throw new MXApplicationException("messagebox", "CustomMessage", params);
 
+	        cust.component.Logger.Log("linecost2#5");
             Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
             setValue("linecost2", getDouble("quantity") * -1.0D * avgcost2.doubleValue(), 2L);
 	  }
 	  
-	  ///AMB===v===
-	  /// Reemplazada por la función de más abajo.
-	  /// Error #5
-	  /*
 	  private MboRemote getInvCostRecord(MboRemote inventory) throws MXException, RemoteException
 	  {
 		    MboSetRemote invcostSet = inventory.getMboSet("INVCOST");
@@ -60,9 +57,10 @@ public class MatUseTransCust extends MatUseTrans
 		    }
 		    return null;
 	  }
-	  */
-	  ///AMB===^===
-	  
+	  ///AMB===v===
+	  /// Reemplazada por la función de más abajo.
+	  /// Error #5
+	  /*
 	  private MboRemote getInvCostRecord(MboRemote inventory) throws MXException, RemoteException
 	  {
           final String sql = "itemnum=:1 and location=:2 and itemsetid=:3 and conditioncode=:4 and siteid=:5";
@@ -76,4 +74,7 @@ public class MatUseTransCust extends MatUseTrans
 		  final MboSetRemote invCostSet = inventory.getMboSet("INVCOST$INVCOST", "INVCOST", sqf.format());
 		  return invCostSet.getMbo(0);
 	  }
+	  */
+	  ///AMB===^===
+	  
 }

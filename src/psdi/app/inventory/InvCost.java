@@ -17,7 +17,7 @@ import psdi.mbo.Mbo;
 public class InvCost extends Mbo implements InvCostRemote
 {
     private double accumulativeReceiptQty;
-    public Date exchageDate = null;	///AMB<======  
+    public Date exchageDate = null;	///AMB<======
 
     public InvCost(final MboSet ms) throws MXException, RemoteException {
         super(ms);

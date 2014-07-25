@@ -3,12 +3,16 @@ package psdi.app.inventory;
 import psdi.app.asset.Asset;
 import psdi.app.location.LocationSetRemote;
 import psdi.app.asset.AssetSetRemote;
+
 import java.util.Hashtable;
+
 import psdi.app.common.RoundToScale;
 import psdi.app.invoice.InvoiceCostRemote;
 import psdi.app.invoice.InvoiceLineRemote;
+
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
 import psdi.app.contract.Contract;
 import psdi.app.item.ItemOrgInfoSetRemote;
 import psdi.app.inventory.virtual.AssetInputRemote;
@@ -18,7 +22,9 @@ import psdi.app.common.Taxes;
 import psdi.app.common.Cost;
 import psdi.security.UserInfo;
 import psdi.app.invoice.InvoiceServiceRemote;
+
 import java.util.HashMap;
+
 import psdi.app.common.receipt.ReceiptMboSet;
 import psdi.util.MXMath;
 import psdi.app.site.SiteServiceRemote;
@@ -44,7 +50,9 @@ import psdi.app.location.LocationRemote;
 import psdi.app.inventory.virtual.KitRemote;
 import psdi.app.item.ItemStructRemote;
 import psdi.mbo.Translate;
+
 import java.util.Date;
+
 import psdi.app.po.POLineRemote;
 import psdi.app.po.PORemote;
 import psdi.app.financial.FinancialServiceRemote;
@@ -57,14 +65,18 @@ import psdi.app.po.ShipmentRemote;
 import psdi.app.item.ItemRemote;
 import psdi.app.common.TaxUtility;
 import psdi.txn.Transactable;
+
 import java.rmi.RemoteException;
+
 import psdi.util.MXException;
 import psdi.mbo.MboSet;
 import psdi.app.item.ItemSetRemote;
 import psdi.app.location.LocationServiceRemote;
 import psdi.util.MXApplicationException;
 import psdi.mbo.MboRemote;
+
 import java.util.Vector;
+
 import psdi.app.common.receipt.ReceiptMbo;
 
 public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
@@ -782,15 +794,39 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             else {
                 final boolean sameStoreroom = this.getString("fromstoreloc").equalsIgnoreCase(this.getString("tostoreloc"));
                 if (!sameStoreroom) {
+                	
+                	double exr = this.getDouble("exchangerate");
+                	
+            		if (exr == 1.0)
+            		{
+            			((Inventory)invmbo).exchageDate = this.getDate("transdate");;
+            		}
+
             		if (this.getTranslator().toInternalString("ISSUETYP", this.getString("issuetype")).equalsIgnoreCase("VOIDRECEIPT") ||
             			this.getTranslator().toInternalString("ISSUETYP", this.getString("issuetype")).equalsIgnoreCase("RETURN")) 
             		{
-            			// ANULACION DE RECEPCION: MARCO LA FECHA DEL RECIBO EN LUGAR DE LA FECHA ACTUAL
-            			// PARA CALCULAR EL TIPO DE CAMBIO PARA EL PPP UD
-            			((Inventory)invmbo).exchageDate = getActualDate();
-             		}
+            			// ANULACION DE RECEPCION  O DEVOLUCION: LA FECHA DEL RECIBO EN LUGAR DE LA FECHA ACTUAL
+            			// PARA CALCULAR EL TIPO DE CAMBIO
+            			
+            			final UserInfo user = getUserInfo();
+            		    
+            			final CurrencyServiceRemote currService = (CurrencyServiceRemote)MXServer.getMXServer().lookup("CURRENCY");
+            		    
+            			String baseCurrency1 = currService.getBaseCurrency1(getString("orgid"), user);
+            			String baseCurrency2 = currService.getBaseCurrency2(getString("orgid"), user);
+            	    
+            			if (baseCurrency2 != null && !baseCurrency2.equals(""))
+            			{
+        					((Inventory)invmbo).exchageDate = getActualDate();
 
-                    ((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), 1.0, invcost);
+            				if (exr != 1.0)
+            				{
+            					exr = currService.getCurrencyExchangeRate(user, baseCurrency2, baseCurrency1, getActualDate(), getString("orgid"));
+            				}
+            			}
+             		}
+            		
+                    ((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), exr, invcost);
                 }
             } 
             ///AMB===^===

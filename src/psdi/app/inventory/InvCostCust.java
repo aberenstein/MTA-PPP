@@ -95,53 +95,53 @@ public class InvCostCust extends InvCost
 	///AMB===^===
 
     @Override
-	public void updateAverageCost(double quantity, double totalvalue, double exr) throws MXException, RemoteException
-	{ 
+	public void updateAverageCost(double quantity, double totalvalueARS, double exr) throws MXException, RemoteException
+	{
 		///AMB===v===
     	/// Calcula el PPP usando la fecha adecuada para el tipo de cambio.
     	/// La fecha adecuada para el tipo de cambio es la que está almacenada en super.exchageDate o la fecha actual si ese valor es nulo.
     	/// Errores #1 y #2
-		final double cur_bal = getCurrentBalance(null, null) + this.accumulativeReceiptQty;
-		if ((cur_bal + quantity <= 0.0D) || ((totalvalue == 0.0D) && (quantity == 0.0D))) {
+    	final double cur_bal = getCurrentBalance(null, null) + this.accumulativeReceiptQty;
+		if ((cur_bal + quantity <= 0.0D) || ((totalvalueARS == 0.0D) && (quantity == 0.0D))) {
 			return;
 		}
 
-		double new_avgcost;
-		if (cur_bal > 0.0D)
+		if (cur_bal + quantity != 0)
 		{
 			final double avgcost = getDouble("avgcost");
-			new_avgcost = (avgcost * cur_bal + totalvalue * exr) / (cur_bal + quantity);
-		} else {
-			new_avgcost = totalvalue * exr / quantity;
-		}
-		setValue("avgcost", new_avgcost, 2L);
-    
-		Date date = MXServer.getMXServer().getDate(getClientLocale(), getClientTimeZone());
-		if (super.exchageDate != null) {
-			date = super.exchageDate;
-			super.exchageDate = null;
-		}
-    
-		final UserInfo user = getUserInfo();
-	    
-		final CurrencyServiceRemote currService = (CurrencyServiceRemote)MXServer.getMXServer().lookup("CURRENCY");
-	    
-		String baseCurrency1 = currService.getBaseCurrency1(getString("orgid"), user);
-		String baseCurrency2 = currService.getBaseCurrency2(getString("orgid"), user);
-    
-		if ((!baseCurrency2.equals("")) && (baseCurrency2 != null))
-		{
-			double exr2 = currService.getCurrencyExchangeRate(user, baseCurrency1, baseCurrency2, date, getString("orgid"));
-      
-			if (cur_bal + quantity != 0)
-			{
-				double avgcost2 = getDouble("avgcost2");
-				double new_avgcost2 = exr != 1? ((avgcost2 * cur_bal + totalvalue) / (cur_bal + quantity)):			// la OC esta en la moneda 2 (USD)
-					                            ((avgcost2 * cur_bal + totalvalue * exr2) / (cur_bal + quantity));	// la OC esta en la moneda 1 (ARS)			
-				setValue("avgcost2", new_avgcost2, 2L);
-			}
-		}
+			final double new_avgcost = (avgcost * cur_bal + totalvalueARS) / (cur_bal + quantity);
 
+			setValue("avgcost", new_avgcost, 2L);
+
+			final UserInfo user = getUserInfo();
+		    
+			final CurrencyServiceRemote currService = (CurrencyServiceRemote)MXServer.getMXServer().lookup("CURRENCY");
+		    
+			String baseCurrency1 = currService.getBaseCurrency1(getString("orgid"), user);
+			String baseCurrency2 = currService.getBaseCurrency2(getString("orgid"), user);
+	    
+			final Date now = MXServer.getMXServer().getDate(this.getClientLocale(), this.getClientTimeZone());
+
+			double exr2 = (baseCurrency2 == null || baseCurrency2.equals(""))? 1.0:
+					      currService.getCurrencyExchangeRate(user, baseCurrency1, baseCurrency2, now, getString("orgid"));
+
+			double totalvalueUSD = totalvalueARS * exr2;
+
+			if (super.exchageDate != null)
+			{
+  				final Date date = super.exchageDate;
+   				super.exchageDate = null;
+   				
+   				exr2 = (baseCurrency2 == null || baseCurrency2.equals(""))? 1.0:
+   					   currService.getCurrencyExchangeRate(user, baseCurrency1, baseCurrency2, date, getString("orgid"));
+
+				totalvalueUSD = totalvalueARS * exr2;
+			}
+
+			double avgcost2 = getDouble("avgcost2");
+			double new_avgcost2 = (avgcost2 * cur_bal + totalvalueUSD) / (cur_bal + quantity);			
+			setValue("avgcost2", new_avgcost2, 2L);
+		}
 		///AMB===^===
 	} 
     

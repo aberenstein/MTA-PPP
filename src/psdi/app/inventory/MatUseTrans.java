@@ -307,7 +307,7 @@ public class MatUseTrans extends Mbo implements MatUseTransRemote
             this.setValue("linecost2", invcost.getDouble("avgcost2") * quantity, 2L);
         }
 	    ///AMB===^===
-         
+
         this.setValue("assetnum", owner.getString("assetnum"), 11L);
         final MatRecTrans matrec = owner;
         this.setValue("rotassetnum", matrec.getRotAssetNum(), 11L);

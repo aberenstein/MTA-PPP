@@ -77,7 +77,7 @@ public class Inventory extends StatefulMbo implements InventoryRemote
     private String kitTransAttr;
     double accumulativeTotalCurBal;
     
-    public Date exchageDate = null;	///AMB<======
+	public Date exchageDate = null;	///AMB<======
     
     public Inventory(final MboSet ms) throws MXException, RemoteException {
         super(ms);
@@ -586,6 +586,8 @@ public class Inventory extends StatefulMbo implements InventoryRemote
         if (invCost == null) {
             throw new MXApplicationException("inventory", "invCostNotFound");
         }
+        invCost.exchageDate = this.exchageDate;	///AMB<======
+        this.exchageDate = null;				///AMB<======
         invCost.updateAverageCost(quantity, totalvalue, exr);
     }
     
@@ -594,6 +596,8 @@ public class Inventory extends StatefulMbo implements InventoryRemote
         if (invC == null) {
             throw new MXApplicationException("inventory", "invCostNotFound");
         }
+        invC.exchageDate = this.exchageDate;	///AMB<======
+        this.exchageDate = null;				///AMB<======
         invC.updateAverageCost(quantity, totalvalue, exr);
     }
     

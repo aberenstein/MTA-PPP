@@ -817,16 +817,41 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             	    
             			if (baseCurrency2 != null && !baseCurrency2.equals(""))
             			{
-        					((Inventory)invmbo).exchageDate = getActualDate();
+            				Date actualDate = getActualDate();
+        					((Inventory)invmbo).exchageDate = actualDate;
 
             				if (exr != 1.0)
             				{
-            					exr = currService.getCurrencyExchangeRate(user, baseCurrency2, baseCurrency1, getActualDate(), getString("orgid"));
+            					double exrOC = exr;
+            					
+            					exr = currService.getCurrencyExchangeRate(user, baseCurrency2, baseCurrency1, actualDate, getString("orgid"));
+            					double exr2 = currService.getCurrencyExchangeRate(user, baseCurrency1, baseCurrency2, actualDate, getString("orgid"));
+
+            					/*
+								1) En la Anulación y en la Devolución de la recepción de una OC en ARS no está grabando en
+								   MATRECTRANS.EXCHANGERATE2 el tipo de cambio utilizado para el cálculo del PPP en USD, 
+								   sino el que viene de la OC.
+								*/
+            					this.setValue("exchagerate2", exr2, 11L);
+
+                            	/*
+								2) En la Anulación y en la Devolución de la recepción de una OC en ARS no está grabando en
+								   MATRECTRANS.LINECOST2 el monto utilizado para el cálculo del PPP en USD, sino la 
+								   multiplicación del precio de la OC por el tipo de cambio de la OC por la cantidad. 
+								   Debería grabar el monto que tome en cuenta el tipo de cambio utilizado para el cálculo 
+								   del PPP en USD.            					 
+
+            					   linecost2 = getDouble("unitcost") * getDouble("quantity") / exrOC;	// es
+            					   linecost2 = getDouble("unitcost") * getDouble("quantity") / exr;	// debe ser
+								*/
+            					double linecost2 = this.getDouble("linecost2") * exrOC / exr;
+                            	this.setValue("linecost2", linecost2, 11L);
             				}
             			}
              		}
             		
                     ((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), exr, invcost);
+                    
                 }
             } 
             ///AMB===^===
@@ -1685,12 +1710,10 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                 		throw new MXApplicationException("messagebox", "CustomMessage", params);
                 	}
                 	InvCost invcost = (InvCost)getInvCostRecord(invMbo);
-                	if (invcost == null)  {
-                		final String[] params = { "Error: no se encontró el PPP." };
-                		throw new MXApplicationException("messagebox", "CustomMessage", params);
+                	if (invcost != null)  {
+                    	Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
+                    	this.setValue("linecost2", this.getDouble("quantity") * avgcost2, 11L);
                 	}
-                	Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
-                	this.setValue("linecost2", this.getDouble("quantity") * avgcost2, 11L);
                 }
                 ///AMB===^===
 

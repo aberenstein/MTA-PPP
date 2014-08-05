@@ -1703,16 +1703,14 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                 ///AMB===v===
                 /// Error #5: corrige el calculo de linecost2 para transferencias dentro del mismo almacén
                 final boolean sameStoreroom = this.getString("fromstoreloc").equalsIgnoreCase(this.getString("tostoreloc"));
-                if (!sameStoreroom) {
+                if (sameStoreroom) {
                 	final Inventory invMbo = (Inventory)this.getSharedInventory(this.getString("tostoreloc"), this.getString("siteid"));
-                	if (invMbo == null) {
-                		final String[] params = { "Error: no se encontró el PPP." };
-                		throw new MXApplicationException("messagebox", "CustomMessage", params);
-                	}
-                	InvCost invcost = (InvCost)getInvCostRecord(invMbo);
-                	if (invcost != null)  {
-                    	Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
-                    	this.setValue("linecost2", this.getDouble("quantity") * avgcost2, 11L);
+                	if (invMbo != null) {
+                    	InvCost invcost = (InvCost)getInvCostRecord(invMbo);
+                    	if (invcost != null)  {
+                        	Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
+                        	this.setValue("linecost2", this.getDouble("quantity") * avgcost2, 11L);
+                    	}
                 	}
                 }
                 ///AMB===^===

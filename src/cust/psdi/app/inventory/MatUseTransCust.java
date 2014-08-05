@@ -23,16 +23,17 @@ public class MatUseTransCust extends MatUseTrans
 	  {
 		    super.save();
 
-            final String[] params = { "Error: no se encontró el PPP." };
-
 	        final Inventory invMbo = (Inventory)getSharedInventory();
-	        if (invMbo == null) throw new MXApplicationException("messagebox", "CustomMessage", params);
+	        if (invMbo != null)
+        	{
+	        	InvCost invcost = (InvCost)getInvCostRecord(invMbo);
+	        	if (invcost != null)
+	        	{
+		            Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
+		            setValue("linecost2", getDouble("quantity") * -1.0D * avgcost2.doubleValue(), 2L);
+	        	}
+        	}
 	        	
-	        InvCost invcost = (InvCost)getInvCostRecord(invMbo);
-	        if (invcost == null) throw new MXApplicationException("messagebox", "CustomMessage", params);
-
-            Double avgcost2 = Double.valueOf(invcost.getDouble("avgcost2"));
-            setValue("linecost2", getDouble("quantity") * -1.0D * avgcost2.doubleValue(), 2L);
 	  }
 	  
 	  private MboRemote getInvCostRecord(MboRemote inventory) throws MXException, RemoteException

@@ -832,7 +832,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
 								   MATRECTRANS.EXCHANGERATE2 el tipo de cambio utilizado para el cálculo del PPP en USD, 
 								   sino el que viene de la OC.
 								*/
-            					this.setValue("exchagerate2", exr2, 11L);
+            					this.setValue("exchangerate2", exr2, 11L);
 
                             	/*
 								2) En la Anulación y en la Devolución de la recepción de una OC en ARS no está grabando en

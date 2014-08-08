@@ -799,6 +799,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
                 	
             		if (exr == 1.0)
             		{
+            			// Es en ARS
             			((Inventory)invmbo).exchageDate = this.getDate("transdate");;
             		}
 
@@ -820,8 +821,10 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             				Date actualDate = getActualDate();
         					((Inventory)invmbo).exchageDate = actualDate;
 
-            				if (exr != 1.0)
+            				if (exr == 1.0)
             				{
+            					// Es en ARS
+            					
             					double exrOC = exr;
             					
             					exr = currService.getCurrencyExchangeRate(user, baseCurrency2, baseCurrency1, actualDate, getString("orgid"));

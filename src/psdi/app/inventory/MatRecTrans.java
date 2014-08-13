@@ -825,9 +825,9 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             				{
             					// Es en ARS
             					
-            					double exrOC = exr;
+            					double exr2OC = this.getDouble("exchangerate2");
             					
-            					exr = currService.getCurrencyExchangeRate(user, baseCurrency2, baseCurrency1, actualDate, getString("orgid"));
+//            					exr = currService.getCurrencyExchangeRate(user, baseCurrency2, baseCurrency1, actualDate, getString("orgid"));
             					double exr2 = currService.getCurrencyExchangeRate(user, baseCurrency1, baseCurrency2, actualDate, getString("orgid"));
 
             					/*
@@ -847,7 +847,7 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
             					   linecost2 = getDouble("unitcost") * getDouble("quantity") * exrOC;	// es
             					   linecost2 = getDouble("unitcost") * getDouble("quantity") * exr2;	// debe ser
 								*/
-            					double linecost2 = this.getDouble("linecost2") * exr2 / exrOC;
+            					double linecost2 = this.getDouble("linecost2") * exr2 / exr2OC;
                             	this.setValue("linecost2", linecost2, 11L);
             				}
             			}

@@ -844,16 +844,48 @@ public class MatRecTrans extends ReceiptMbo implements MatRecTransRemote
 								   Debería grabar el monto que tome en cuenta el tipo de cambio utilizado para el cálculo 
 								   del PPP en USD.            					 
 
-            					   linecost2 = getDouble("unitcost") * getDouble("quantity") / exrOC;	// es
-            					   linecost2 = getDouble("unitcost") * getDouble("quantity") / exr;	// debe ser
+            					   linecost2 = getDouble("unitcost") * getDouble("quantity") * exrOC;	// es
+            					   linecost2 = getDouble("unitcost") * getDouble("quantity") * exr2;	// debe ser
 								*/
-            					double linecost2 = this.getDouble("linecost2") * exrOC / exr;
+            					double linecost2 = this.getDouble("linecost2") * exr2 / exrOC;
                             	this.setValue("linecost2", linecost2, 11L);
             				}
             			}
              		}
             		
-                    ((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), exr, invcost);
+            		if (this.getTranslator().toInternalString("ISSUETYP", this.getString("issuetype")).equalsIgnoreCase("RECEIPT") && exr == 1.0) 
+                	{
+                		// RECEPCION EN ARS
+                		/*
+                		   1) En el caso de las Recepciones en ARS, el valor del campo MATRECTRANS.EXCHANGERATE2 debería 
+                		      ser el tipo de cambio del momento de la recepción, y no el correspondiente al momento de 
+                		      aprobación de la OC.
+                		      Además el valor del campo MATRECTRANS.LINECOST2 debería ser el producto de la cantidad por 
+                		      el valor unitario de la OC por el tipo de cambio correcto.
+                		*/
+            			
+                		final UserInfo user = getUserInfo();
+                		    
+                		final CurrencyServiceRemote currService = (CurrencyServiceRemote)MXServer.getMXServer().lookup("CURRENCY");
+                		    
+                		String baseCurrency1 = currService.getBaseCurrency1(getString("orgid"), user);
+                		String baseCurrency2 = currService.getBaseCurrency2(getString("orgid"), user);
+                	    
+                		if (baseCurrency2 != null && !baseCurrency2.equals(""))
+                		{
+                			Date actualDate = this.getDate("transdate");
+
+                			exr = currService.getCurrencyExchangeRate(user, baseCurrency2, baseCurrency1, actualDate, getString("orgid"));
+                			double exr2 = currService.getCurrencyExchangeRate(user, baseCurrency1, baseCurrency2, actualDate, getString("orgid"));
+
+                			this.setValue("exchangerate2", exr2, 11L);
+
+                			double linecost2 = this.getDouble("linecost") * exr2;
+                            this.setValue("linecost2", linecost2, 11L);
+                		}
+                 	}
+
+            		((Inventory)invmbo).updateInventoryAverageCost(quantity, this.getDouble("loadedcost"), exr, invcost);
                     
                 }
             } 
